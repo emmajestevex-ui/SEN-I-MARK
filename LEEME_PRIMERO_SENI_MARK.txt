@@ -37,3 +37,8 @@ CORRECCION 22-OCT-2026:
 - No ejecutes SQL en el proyecto original; verifica salida de Actions primero.
 - IMPORTANTE: copia el contenido de este ZIP en SEN-I-MARK, reemplazando tools/seni_mark_migrate.py.
 - En GitHub Desktop pulsa Commit to main y Push origin. No uses Re-run de la ejecucion fallida.
+
+CORRECCION V3:
+- Retira comprobaciones por correos GREEG dentro de is_license_admin().
+- Admin de SEN$I MARK se configura solo con ASIGNAR_ADMIN_SENI_MARK.sql en Supabase nuevo.
+- No usar SQL antiguo de GREEG.

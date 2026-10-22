@@ -80,6 +80,61 @@ def replace_all(text: str) -> str:
     return text
 
 
+# Legacy GREEG scripts grant access to a fixed set of email addresses.
+# A different company's SQL must NEVER give founder access to those accounts.
+_ADMIN_FUNCTION_PATTERN = re.compile(
+    r"(?ims)^[ \t]*create\s+or\s+replace\s+function\s+public\.is_license_admin\s*\(\s*\)\s*"
+    r"returns\s+boolean\b.*?^[ \t]*\$\$;"
+)
+_ADMIN_FUNCTION_SAFE = """create or replace function public.is_license_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+    select exists (
+        select 1
+        from public.license_admins
+        where user_id = auth.uid()
+          and role in ('founder', 'admin')
+    );
+$$;"""
+_ADMIN_SEED_PATTERN = re.compile(
+    r"(?ims)^\s*insert\s+into\s+public\.license_admins\s*\(\s*user_id\s*,\s*role\s*\)\s*"
+    r"select\s+id\s*,\s*'founder'\s+from\s+auth\.users\s+where\s+lower\(email\)\s+in\s*"
+    r"\(.*?\)\s*on\s+conflict\s*\(user_id\)\s*do\s+update\s*set\s+role\s*=\s*excluded\.role\s*;"
+)
+_DEMO_LICENSE_PATTERN = re.compile(
+    r"(?ims)^\s*insert into public\.licenses\s*\(license_key,\s*label,\s*capabilities,\s*status,\s*is_active\)"
+    r"\s*values\s*\(.*?\)\s*on conflict\s*\(license_key\)\s*do update\s*set.*?;"
+)
+_LEGACY_FOUNDER_EMAILS = (
+    'ysiemmanuel9@gmail.com',
+    '2008yashirchavez@gmail.com',
+    'emmajestevex@gmail.com',
+    'grego23500@gmail.com',
+)
+
+
+def sanitize_legacy_sql(chunk: str) -> str:
+    """Replace legacy email-based admin authorization with DB membership only."""
+    chunk = _ADMIN_FUNCTION_PATTERN.sub(_ADMIN_FUNCTION_SAFE, chunk)
+    chunk = _ADMIN_SEED_PATTERN.sub(
+        '\n-- Legacy founder list intentionally removed for SEN$I MARK.\n', chunk
+    )
+    chunk = _DEMO_LICENSE_PATTERN.sub(
+        '\n-- Legacy demo license intentionally removed for SEN$I MARK.\n', chunk
+    )
+    # Fail closed if an unexpected source uses a different SQL structure.
+    old_emails = [email for email in _LEGACY_FOUNDER_EMAILS if email in chunk.lower()]
+    if old_emails:
+        raise AssertionError(
+            'Legacy administrator access remains in SQL; manual review required'
+        )
+    return chunk
+
+
 def update_text_files():
     for p in ROOT.rglob('*'):
         if not p.is_file():
@@ -97,6 +152,8 @@ def update_text_files():
         except Exception:
             continue
         new = replace_all(old)
+        if p.suffix.lower() == '.sql':
+            new = sanitize_legacy_sql(new)
         if new != old:
             p.write_text(new, encoding='utf-8', newline='\n')
             CHANGES.append(str(p.relative_to(ROOT)))
@@ -158,18 +215,9 @@ def write_sql_files():
         if not path.exists():
             raise AssertionError(f'Falta SQL real de la base GREEG-APP: {path}')
         chunk = path.read_text(encoding='utf-8-sig')
-        # Do not grant old project's users founder access on this new project.
-        chunk = re.sub(
-            r"(?ims)^\s*insert into public\.license_admins\s*\(user_id,\s*role\)\s*"
-            r"select id,\s*'founder'\s*from auth\.users\s*where lower\(email\) in\s*"
-            r"\(.*?\)\s*on conflict \(user_id\) do update\s*set role = excluded\.role;",
-            '\n-- Admin seed omitted intentionally: assign your own verified Auth user later.\n', chunk)
-        # Do not transplant the base project's demo access key.
-        chunk = re.sub(
-            r"(?ims)^\s*insert into public\.licenses\s*\(license_key,\s*label,\s*capabilities,\s*status,\s*is_active\)"
-            r"\s*values\s*\(.*?\)\s*on conflict\s*\(license_key\)\s*do update\s*set.*?;",
-            '\n-- Demo license seed omitted intentionally.\n', chunk)
-        chunk = replace_all(chunk)
+        chunk = sanitize_legacy_sql(replace_all(chunk))
+        # Source scripts stay sanitized too, to prevent an accidental old SQL run.
+        path.write_text(chunk, encoding='utf-8', newline='\n')
         sections.append(f'\n-- ===== {name} =====\n' + chunk.rstrip() + '\n')
     header = (
         f'-- SEN$I MARK - SQL basado en scripts reales de GREEG-APP\n'
@@ -223,7 +271,15 @@ def verify():
     assert 'create table if not exists public.licenses' in sql.lower(), 'SQL no incluye tabla licenses'
     assert 'remote_content_files' in sql, 'SQL no incluye funciones de archivos'
     assert 'greeg-content' not in sql.lower(), 'SQL contiene bucket antiguo'
-    assert 'ysiemmanuel9@gmail.com' not in sql.lower(), 'SQL contiene admin del proyecto base'
+    assert not any(email in sql.lower() for email in _LEGACY_FOUNDER_EMAILS), 'SQL contiene admin del proyecto base'
+    assert 'lower(coalesce(auth.jwt()' not in sql.lower(), 'SQL permite admins por correo JWT'
+    assert 'where user_id = auth.uid()' in sql.lower(), 'SQL sin validacion basada en identidad'
+    assert 'seni-mark-content' in sql.lower(), 'SQL sin bucket independiente'
+    for sql_path in ROOT.rglob('*.sql'):
+        if any(part in IGNORE_DIRS for part in sql_path.parts):
+            continue
+        content = sql_path.read_text(encoding='utf-8-sig').lower()
+        assert not any(email in content for email in _LEGACY_FOUNDER_EMAILS), f'Admin heredado en {sql_path}'
     info = ROOT/'ThreeOneOSFive'/'Info.plist'
     if info.exists():
         ET.fromstring(info.read_text(encoding='utf-8-sig'))
