@@ -1,0 +1,31 @@
+SEN$I MARK - MIGRACION AUTOMATICA DESDE GREEG-APP
+=================================================
+
+DESTINO UNICO: https://github.com/emmajestevex-ui/SEN-I-MARK
+BASE (SOLO LECTURA): https://github.com/emmajestevex-ui/GREEG-APP
+BASE DE DATOS NUEVA: https://zkprqwgeagqireqrrhei.supabase.co
+NOMBRE VISIBLE: SEN$I MARK
+CLAVES: SENIMARK-...
+PALETA: ROJO / NEGRO / METALICO
+TIKTOK: https://www.tiktok.com/@imarkzz20?_r=1&_t=ZS-9AkqsBtfFuW
+
+1) SUBIR AL REPOSITORIO NUEVO
+   a) Clona https://github.com/emmajestevex-ui/SEN-I-MARK.git
+   b) Descomprime este ZIP y copia su contenido dentro del repo local.
+   c) Haz Commit y Push.
+
+2) GITHUB ACTIONS HACE LA MIGRACION
+   - Abre Actions en el repo SEN-I-MARK.
+   - Ejecuta: "SEN$I MARK - Migrar, SQL, Panel e IPA".
+   - El workflow toma GREEG-APP como base, copia sus archivos y les cambia identidad, panel, SQL, icono y conexión Supabase.
+   - NO modifica GREEG-APP.
+
+3) ARTIFACTS ESPERADOS
+   - SENI-MARK-SQL-COMPLETO
+   - SENI-MARK-PANEL-ADMIN
+   - SENI-MARK-CODIGO-FUENTE
+   - SENI-MARK-IPA-SIN-FIRMA (si compila)
+
+4) SUPABASE NUEVO
+   Proyecto: zkprqwgeagqireqrrhei
+   Publishable key: sb_publishable_tQ88K1eydtR-7JBgTfMglQ_J55QtO65

@@ -1,0 +1,142 @@
+name: 'SEN$I MARK - Migrar, SQL, Panel e IPA'
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_admin:
+        description: 'Publicar el unico panel administrativo con GitHub Pages'
+        type: boolean
+        default: false
+        required: true
+  push:
+    branches: [main]
+    paths:
+      - 'branding/**'
+      - 'tools/seni_mark_migrate.py'
+      - '.github/workflows/seni_mark_release.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seni-mark-main
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: 'Copiar la base y preparar SEN$I MARK'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Obtener el nuevo repositorio SEN-I-MARK'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: 'Leer solo la base publica GREEG-APP'
+        uses: actions/checkout@v4
+        with:
+          repository: emmajestevex-ui/GREEG-APP
+          ref: main
+          path: .senimark-base
+          persist-credentials: false
+      - name: 'Preparar app independiente, SQL completo y panel'
+        run: |
+          python3 tools/seni_mark_migrate.py --base .senimark-base
+          rm -rf .senimark-base
+          python3 tools/seni_mark_migrate.py --verify
+          git diff --check
+      - name: 'Crear paquete reproducible sin repositorio Git'
+        run: |
+          tar --exclude='./.git' --exclude='./.build' --exclude='./.senimark-base' -czf /tmp/seni-mark-project.tgz .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SENI-MARK-SQL-COMPLETO
+          path: |
+            supabase/SETUP_SENI_MARK_COMPLETO.sql
+            supabase/ASIGNAR_ADMIN_SENI_MARK.sql
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SENI-MARK-PANEL-ADMIN
+          path: |
+            admin/index.html
+            admin/app.js
+            admin/styles.css
+            admin/seni-mark-logo.png
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SENI-MARK-CODIGO-FUENTE
+          path: /tmp/seni-mark-project.tgz
+          if-no-files-found: error
+      - name: 'Publicar los archivos de SEN$I MARK en SEN-I-MARK'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m 'Import SEN$I MARK independent app, admin and Supabase SQL'
+            git push origin HEAD:main
+          fi
+
+  ios_ipa:
+    name: 'Compilar IPA sin firmar (requiere macOS)'
+    needs: prepare
+    runs-on: macos-15
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SENI-MARK-CODIGO-FUENTE
+          path: ${{ runner.temp }}/seni-mark-download
+      - name: 'Restaurar codigo'
+        run: |
+          mkdir -p project
+          tar -xzf '${{ runner.temp }}/seni-mark-download/seni-mark-project.tgz' -C project
+      - name: 'Compilar iOS'
+        working-directory: project
+        run: |
+          set -o pipefail
+          xcodebuild -list -project ThreeOneOSFive.xcodeproj
+          xcodebuild -project ThreeOneOSFive.xcodeproj             -scheme 3105             -configuration Release             -sdk iphoneos             -derivedDataPath .build             CODE_SIGNING_ALLOWED=NO             build | tee '${{ runner.temp }}/seni-mark-build.log'
+      - name: 'Empaquetar IPA no firmada'
+        working-directory: project
+        run: |
+          APP=$(find .build/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -type d | head -n 1)
+          test -n "$APP" || (echo 'No se encontro .app compilada' && exit 1)
+          mkdir -p Payload
+          ditto "$APP" "Payload/$(basename "$APP")"
+          zip -qr ../SENI_MARK_unsigned.ipa Payload
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SENI-MARK-IPA-SIN-FIRMA
+          path: SENI_MARK_unsigned.ipa
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: SENI-MARK-LOG-COMPILACION
+          path: ${{ runner.temp }}/seni-mark-build.log
+          if-no-files-found: ignore
+
+  publish_admin:
+    name: 'Publicar UN panel admin (opcional)'
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_admin == true
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: SENI-MARK-PANEL-ADMIN
+          path: public
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deploy
+        uses: actions/deploy-pages@v4
