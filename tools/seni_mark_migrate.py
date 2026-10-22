@@ -14,29 +14,45 @@ BUNDLE_ID = 'com.senimark.client'
 TIKTOK = 'https://www.tiktok.com/@imarkzz20?_r=1&_t=ZS-9AkqsBtfFuW'
 CHANGES = []
 TEXT_EXTS = {'.swift','.m','.h','.plist','.pbxproj','.js','.html','.css','.json','.md','.sql','.txt','.xml','.yaml','.yml','.sh','.bat'}
-IGNORE_DIRS = {'.git','.build','node_modules','Pods','DerivedData'}
-OLD_BRANDS = ['GLOBAL IOS','Global IOS','Software Ch3at','SOFTWARE CH3AT','SoftCh3at','Gllyzi','GLLYZI','GLIZZY','GREEG APP','GREEG-APP','GREEG_APP','GREEG','GlobalIOS','GLOBALIOS']
+IGNORE_DIRS = {'.git','.github','.senimark-base','.build','node_modules','Pods','DerivedData'}
+OLD_BRANDS = ['GLOBAL IOS','Global IOS','Software Ch3at','SOFTWARE CH3AT','SoftCh3at','Gllyzi','GLLYZI','GLIZZY','GREEG APP','GREEG-APP','GREEG_APP','GlobalIOS','GLOBALIOS']
 OLD_KEY_PREFIXES = ['GLOBALIOS-','SOFTWARECH3AT-','SOFTCH3AT-','GLYYZI-','GLIZZY-','GREEG-']
 APP_ICON = ROOT/'branding'/'AppIcon-1024.png'
 LOGO = ROOT/'branding'/'SeniMarkLogo.png'
 
 
 def clone_files(base: Path):
+    """Copy the public source tree without destroying the checked-out source or Git.
+
+    GitHub Actions checks out GREEG-APP to ROOT/.senimark-base. Keeping that
+    directory is mandatory until the copy has finished. Original workflows are
+    deliberately not merged so only SEN$I MARK's workflow can be triggered.
+    """
+    base = base.resolve()
     if not base.is_dir():
         raise SystemExit(f'La base no existe: {base}')
+    if base == ROOT.resolve():
+        raise SystemExit('La base debe ser una carpeta distinta del repositorio destino')
+    preserved = {
+        '.git', '.github', 'tools', 'branding', '.senimark-base',
+        'LEEME_PRIMERO_SENI_MARK.txt',
+    }
     for item in list(ROOT.iterdir()):
-        if item.name in {'branding','tools','.github','LEEME_PRIMERO_SENI_MARK.txt'}:
+        if item.name in preserved or item.resolve() == base:
             continue
-        if item.is_dir():
+        if item.is_dir() and not item.is_symlink():
             shutil.rmtree(item)
         else:
             item.unlink()
-    for src in base.iterdir():
-        if src.name in IGNORE_DIRS:
+    # This list is materialized before any filesystem mutations.
+    for src in list(base.iterdir()):
+        if src.name in IGNORE_DIRS or src.name in {'.github', 'branding'}:
             continue
-        dst = ROOT/src.name
-        if src.is_dir():
-            shutil.copytree(src, dst)
+        dst = ROOT / src.name
+        if src.name == 'tools' and src.is_dir():
+            shutil.copytree(src, dst, dirs_exist_ok=True)
+        elif src.is_dir():
+            shutil.copytree(src, dst, dirs_exist_ok=True)
         else:
             shutil.copy2(src, dst)
 
@@ -45,12 +61,19 @@ def replace_all(text: str) -> str:
     text = text.replace('\r\n','\n').replace('\r','\n')
     for b in OLD_BRANDS:
         text = text.replace(b, BRAND)
+    # Standalone brand tokens may occur in JavaScript identifiers or SQL names.
+    # Use an identifier-safe replacement; display labels are handled above.
+    text = text.replace('GREEG_', PREFIX + '_')
+    text = re.sub(r'\bGREEG\b', PREFIX, text)
     for p in OLD_KEY_PREFIXES:
         text = text.replace(p, PREFIX + '-')
     text = re.sub(r'https://[a-z0-9]{20}\.supabase\.co', URL, text)
     text = re.sub(r'sb_publishable_[A-Za-z0-9_\-]+', KEY, text)
     text = re.sub(r'https://www\.tiktok\.com/@[^\s"\']+', TIKTOK, text)
     text = re.sub(r'https://discord\.gg/[^\s"\']+', TIKTOK, text)
+    text = text.replace('greeg-content', 'seni-mark-content')
+    text = text.replace('GreegLogo', 'SeniMarkLogo')
+    text = text.replace('greeg-logo.png', 'seni-mark-logo.png')
     text = text.replace('global-ios-logo.png','seni-mark-logo.png').replace('GlobalIOSLogo','SeniMarkLogo')
     text = text.replace('global_ios','seni_mark').replace('GLOBAL_IOS','SENI_MARK').replace('global-ios','seni-mark')
     text = re.sub(r'\b(GLOBALIOS|SOFTWARECH3AT|SOFTCH3AT|GLYYZI|GLIZZY|GREEG)\b', PREFIX, text)
@@ -62,6 +85,10 @@ def update_text_files():
         if not p.is_file():
             continue
         if any(part in IGNORE_DIRS for part in p.parts):
+            continue
+        if p.relative_to(ROOT).as_posix() == 'tools/seni_mark_migrate.py':
+            continue
+        if p.name == 'Contents.json' and 'Assets.xcassets' in p.parts:
             continue
         if p.suffix.lower() not in TEXT_EXTS:
             continue
@@ -113,16 +140,65 @@ def patch_info_files():
 
 
 def write_sql_files():
-    sql_dir = ROOT/'supabase'
+    """Build the SQL from real source scripts, omitting old demo credentials.
+
+    The original project has no `supabase/setup_all.sql`. Its real schema is
+    split among licenses_setup.sql, remote_content_setup.sql and a patch update.
+    """
+    sql_dir = ROOT / 'supabase'
     sql_dir.mkdir(parents=True, exist_ok=True)
-    setup = sql_dir/'setup_all.sql'
-    base_sql = setup.read_text(encoding='utf-8-sig') if setup.exists() else '-- setup_all.sql no encontrado en la base; completa este archivo con tu esquema original.\n'
-    base_sql = replace_all(base_sql)
-    header = f"-- SEN$I MARK - SQL completo\n-- Proyecto: {PROJECT_ID}\n-- URL: {URL}\n-- Publishable key: {KEY}\n\n"
-    (sql_dir/'SETUP_SENI_MARK_COMPLETO.sql').write_text(header + base_sql, encoding='utf-8', newline='\n')
-    assign = """-- SEN$I MARK - ASIGNAR ADMINISTRADOR\n\nINSERT INTO public.license_admins (user_id, role)\nSELECT id, 'founder'\nFROM auth.users\nWHERE lower(email) = 'CAMBIA_AQUI_TU_EMAIL'\nON CONFLICT (user_id)\nDO UPDATE SET role = EXCLUDED.role;\n\nSELECT u.email, a.role\nFROM public.license_admins a\nJOIN auth.users u ON u.id = a.user_id\nWHERE lower(u.email) = 'CAMBIA_AQUI_TU_EMAIL';\n"""
-    (sql_dir/'ASIGNAR_ADMIN_SENI_MARK.sql').write_text(assign, encoding='utf-8', newline='\n')
-    CHANGES.extend(['supabase/SETUP_SENI_MARK_COMPLETO.sql','supabase/ASIGNAR_ADMIN_SENI_MARK.sql'])
+    sources = [
+        'licenses_setup.sql',
+        'remote_content_setup.sql',
+        'allow_duplicate_remote_patches.sql',
+    ]
+    sections = []
+    for name in sources:
+        path = sql_dir / name
+        if not path.exists():
+            raise AssertionError(f'Falta SQL real de la base GREEG-APP: {path}')
+        chunk = path.read_text(encoding='utf-8-sig')
+        # Do not grant old project's users founder access on this new project.
+        chunk = re.sub(
+            r"(?ims)^\s*insert into public\.license_admins\s*\(user_id,\s*role\)\s*"
+            r"select id,\s*'founder'\s*from auth\.users\s*where lower\(email\) in\s*"
+            r"\(.*?\)\s*on conflict \(user_id\) do update\s*set role = excluded\.role;",
+            '\n-- Admin seed omitted intentionally: assign your own verified Auth user later.\n', chunk)
+        # Do not transplant the base project's demo access key.
+        chunk = re.sub(
+            r"(?ims)^\s*insert into public\.licenses\s*\(license_key,\s*label,\s*capabilities,\s*status,\s*is_active\)"
+            r"\s*values\s*\(.*?\)\s*on conflict\s*\(license_key\)\s*do update\s*set.*?;",
+            '\n-- Demo license seed omitted intentionally.\n', chunk)
+        chunk = replace_all(chunk)
+        sections.append(f'\n-- ===== {name} =====\n' + chunk.rstrip() + '\n')
+    header = (
+        f'-- SEN$I MARK - SQL basado en scripts reales de GREEG-APP\n'
+        f'-- Nuevo proyecto Supabase: {PROJECT_ID}\n'
+        '-- Ejecutar SOLO en la nueva base, revisar antes de ejecutar.\n'
+        '-- ADMIN: crear primero el usuario en Authentication > Users.\n'
+    )
+    (sql_dir / 'SETUP_SENI_MARK_COMPLETO.sql').write_text(
+        header + '\n'.join(sections), encoding='utf-8', newline='\n')
+    assign = """-- SEN$I MARK: asigna tu usuario existente de Authentication.
+-- Reemplaza CAMBIA_AQUI_TU_EMAIL por tu correo y ejecuta DESPUES del setup.
+DO $$
+DECLARE
+  v_email text := 'CAMBIA_AQUI_TU_EMAIL';
+  v_id uuid;
+BEGIN
+  IF v_email = 'CAMBIA_AQUI_TU_EMAIL' THEN
+    RAISE EXCEPTION 'Reemplaza CAMBIA_AQUI_TU_EMAIL por tu propio correo en Authentication';
+  END IF;
+  SELECT id INTO v_id FROM auth.users WHERE lower(email) = lower(trim(v_email));
+  IF v_id IS NULL THEN
+    RAISE EXCEPTION 'El usuario no existe en Authentication > Users';
+  END IF;
+  INSERT INTO public.license_admins(user_id, role) VALUES (v_id, 'founder')
+  ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
+END $$;
+"""
+    (sql_dir / 'ASIGNAR_ADMIN_SENI_MARK.sql').write_text(assign, encoding='utf-8', newline='\n')
+    CHANGES.extend(['supabase/SETUP_SENI_MARK_COMPLETO.sql', 'supabase/ASIGNAR_ADMIN_SENI_MARK.sql'])
 
 
 def write_docs():
@@ -143,6 +219,11 @@ def verify():
     for rel in required:
         if not (ROOT/rel).exists():
             raise AssertionError('Falta ' + rel)
+    sql = (ROOT/'supabase/SETUP_SENI_MARK_COMPLETO.sql').read_text(encoding='utf-8')
+    assert 'create table if not exists public.licenses' in sql.lower(), 'SQL no incluye tabla licenses'
+    assert 'remote_content_files' in sql, 'SQL no incluye funciones de archivos'
+    assert 'greeg-content' not in sql.lower(), 'SQL contiene bucket antiguo'
+    assert 'ysiemmanuel9@gmail.com' not in sql.lower(), 'SQL contiene admin del proyecto base'
     info = ROOT/'ThreeOneOSFive'/'Info.plist'
     if info.exists():
         ET.fromstring(info.read_text(encoding='utf-8-sig'))

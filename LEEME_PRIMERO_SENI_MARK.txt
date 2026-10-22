@@ -29,3 +29,11 @@ TIKTOK: https://www.tiktok.com/@imarkzz20?_r=1&_t=ZS-9AkqsBtfFuW
 4) SUPABASE NUEVO
    Proyecto: zkprqwgeagqireqrrhei
    Publishable key: sb_publishable_tQ88K1eydtR-7JBgTfMglQ_J55QtO65
+
+CORRECCION 22-OCT-2026:
+- Corrige el borrado accidental de .senimark-base y .git.
+- Conserva herramientas propias y no importa workflows antiguos.
+- Genera SQL con los tres archivos reales de GREEG (sin usuarios ni keys demo).
+- No ejecutes SQL en el proyecto original; verifica salida de Actions primero.
+- IMPORTANTE: copia el contenido de este ZIP en SEN-I-MARK, reemplazando tools/seni_mark_migrate.py.
+- En GitHub Desktop pulsa Commit to main y Push origin. No uses Re-run de la ejecucion fallida.
