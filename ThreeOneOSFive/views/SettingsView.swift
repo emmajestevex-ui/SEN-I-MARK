@@ -17,7 +17,7 @@ struct SettingsView: View {
                         AppLogo()
 
                         VStack(alignment: .leading, spacing: 3) {
-                            Text("GREEG APP").font(.headline)
+                            Text("SEN$I MARK").font(.headline)
                             Text(language.text("common.version", appVersion))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
@@ -106,7 +106,7 @@ struct SettingsView: View {
                     creditsRow(
                         name: "TikTok",
                         role: "@gregg_top",
-                        url: "https://www.tiktok.com/@gregg_top?is_from_webapp=1&sender_device=pc"
+                        url: "https://www.tiktok.com/@imarkzz20?_r=1&_t=ZS-9AkqsBtfFuW"
                     )
                 }
 

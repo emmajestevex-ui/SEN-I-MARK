@@ -1,8 +1,8 @@
-SEN$I MARK - MIGRACION AUTOMATICA DESDE GREEG-APP
+SEN$I MARK - MIGRACION AUTOMATICA DESDE SEN$I MARK
 =================================================
 
 DESTINO UNICO: https://github.com/emmajestevex-ui/SEN-I-MARK
-BASE (SOLO LECTURA): https://github.com/emmajestevex-ui/GREEG-APP
+BASE (SOLO LECTURA): https://github.com/emmajestevex-ui/SEN$I MARK
 BASE DE DATOS NUEVA: https://zkprqwgeagqireqrrhei.supabase.co
 NOMBRE VISIBLE: SEN$I MARK
 CLAVES: SENIMARK-...
@@ -17,8 +17,8 @@ TIKTOK: https://www.tiktok.com/@imarkzz20?_r=1&_t=ZS-9AkqsBtfFuW
 2) GITHUB ACTIONS HACE LA MIGRACION
    - Abre Actions en el repo SEN-I-MARK.
    - Ejecuta: "SEN$I MARK - Migrar, SQL, Panel e IPA".
-   - El workflow toma GREEG-APP como base, copia sus archivos y les cambia identidad, panel, SQL, icono y conexión Supabase.
-   - NO modifica GREEG-APP.
+   - El workflow toma SEN$I MARK como base, copia sus archivos y les cambia identidad, panel, SQL, icono y conexión Supabase.
+   - NO modifica SEN$I MARK.
 
 3) ARTIFACTS ESPERADOS
    - SENI-MARK-SQL-COMPLETO
@@ -33,12 +33,12 @@ TIKTOK: https://www.tiktok.com/@imarkzz20?_r=1&_t=ZS-9AkqsBtfFuW
 CORRECCION 22-OCT-2026:
 - Corrige el borrado accidental de .senimark-base y .git.
 - Conserva herramientas propias y no importa workflows antiguos.
-- Genera SQL con los tres archivos reales de GREEG (sin usuarios ni keys demo).
+- Genera SQL con los tres archivos reales de SENIMARK (sin usuarios ni keys demo).
 - No ejecutes SQL en el proyecto original; verifica salida de Actions primero.
 - IMPORTANTE: copia el contenido de este ZIP en SEN-I-MARK, reemplazando tools/seni_mark_migrate.py.
 - En GitHub Desktop pulsa Commit to main y Push origin. No uses Re-run de la ejecucion fallida.
 
 CORRECCION V3:
-- Retira comprobaciones por correos GREEG dentro de is_license_admin().
+- Retira comprobaciones por correos SENIMARK dentro de is_license_admin().
 - Admin de SEN$I MARK se configura solo con ASIGNAR_ADMIN_SENI_MARK.sql en Supabase nuevo.
-- No usar SQL antiguo de GREEG.
+- No usar SQL antiguo de SENIMARK.

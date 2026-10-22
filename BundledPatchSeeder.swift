@@ -14,7 +14,7 @@ enum BundledPatchSeeder {
         UUID(uuidString: "A55E0001-3105-4A55-9001-00000000BEEF")!, // Asset Indexer
         UUID(uuidString: "A55E0003-3105-4A55-9001-00000000BEEF")!, // Shaders
         UUID(uuidString: "A55E0002-0144-4A55-9001-00000000BEEF")!, // 144 fps
-        UUID(uuidString: "A55E0004-3105-4A55-9001-00000000BEEF")!  // TIO GREEG
+        UUID(uuidString: "A55E0004-3105-4A55-9001-00000000BEEF")!  // TIO SENIMARK
     ]
 
     // MARK: - Public API
@@ -34,7 +34,7 @@ enum BundledPatchSeeder {
     //
     // Ahora NO crea proyectos.
     // Solo limpia los proyectos bundled antiguos que pudieran
-    // quedar instalados por una versión anterior de GREEG APP.
+    // quedar instalados por una versión anterior de SEN$I MARK.
     static func seedIfNeeded(
         fileManager: FileManager = .default
     ) {

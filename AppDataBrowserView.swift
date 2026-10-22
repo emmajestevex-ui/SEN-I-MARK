@@ -126,7 +126,7 @@ struct AppDataBrowserView: View {
                         HStack(spacing: 10) {
                             AppRowIcon(systemName: "folder.fill")
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("GREEG APP")
+                                Text("SEN$I MARK")
                                     .font(.subheadline.weight(.semibold))
                                 Text(language.text("browser.workspace_subtitle"))
                                     .font(.caption)

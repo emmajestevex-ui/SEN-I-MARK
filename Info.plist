@@ -36,7 +36,7 @@
 	<key>NSDocumentsFolderUsageDescription</key>
 	<string>greeg app needs document access only for local app support files.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>GREEG APP usa la red local solo para el flujo de pairing autorizado por el usuario.</string>
+	<string>SEN$I MARK usa la red local solo para el flujo de pairing autorizado por el usuario.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
