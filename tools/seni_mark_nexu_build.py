@@ -18,9 +18,7 @@ SUPABASE_URL = 'https://zkprqwgeagqireqrrhei.supabase.co'
 PUBLISHABLE_KEY = 'sb_publishable_tQ88K1eydtR-7JBgTfMglQ_J55QtO65'
 BUCKET = 'seni-mark-content'
 TIKTOK = 'https://www.tiktok.com/@imarkzz20?_r=1&_t=ZS-9AkqsBtfFuW'
-BUNDLE = 'com.senimark.ios'
-
-
+BUNDLE = 'com.apple.mobile.MobileHouseArrest'
 def must_replace(source: str, old: str, new: str, filename: str) -> str:
     if old not in source:
         raise RuntimeError(f'Base Nexu-lite cambió; falta {old!r} en {filename}. Deteniendo para no producir IPA incorrecta.')
