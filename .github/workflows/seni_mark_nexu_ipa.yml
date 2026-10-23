@@ -1,0 +1,86 @@
+name: 'SEN$I MARK - IPA desde Nexu-lite'
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/seni_mark_nexu_build.py'
+      - '.github/workflows/seni_mark_nexu_ipa.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  ios:
+    name: 'Preparar Nexu-lite y compilar IPA SEN$I MARK'
+    runs-on: macos-15
+    steps:
+      - name: 'Cargar SEN-I-MARK (solo lectura)'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: 'Obtener base Nexu-lite (solo lectura)'
+        uses: actions/checkout@v4
+        with:
+          repository: emmajestevex-ui/Nexu-lite
+          ref: main
+          path: .nexu_ipa_base
+          persist-credentials: false
+      - name: 'Convertir únicamente la app iOS'
+        env:
+          TARGET: ${{ runner.temp }}/seni-mark-app-source
+        run: |
+          python3 tools/seni_mark_nexu_build.py \
+            --base .nexu_ipa_base \
+            --branding branding \
+            --output "$TARGET"
+          cd "$TARGET"
+          plutil -lint ThreeOneOSFive/Info.plist
+      - name: 'Compilar iOS sin firmar'
+        env:
+          TARGET: ${{ runner.temp }}/seni-mark-app-source
+          LOG: ${{ runner.temp }}/seni-mark-xcodebuild.log
+        run: |
+          set -o pipefail
+          cd "$TARGET"
+          xcodebuild -list -project ThreeOneOSFive.xcodeproj
+          xcodebuild -project ThreeOneOSFive.xcodeproj \
+            -scheme 3105 \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$RUNNER_TEMP/seni-mark-derived-data" \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee "$LOG"
+      - name: 'Empaquetar IPA sin firma'
+        env:
+          PRODUCTS: ${{ runner.temp }}/seni-mark-derived-data/Build/Products/Release-iphoneos
+        run: |
+          set -eu
+          APP=$(find "$PRODUCTS" -maxdepth 1 -type d -name '*.app' | head -n 1)
+          test -n "$APP" || { echo 'Xcode no creó un archivo .app'; exit 1; }
+          mkdir -p "$RUNNER_TEMP/seni-payload/Payload"
+          ditto "$APP" "$RUNNER_TEMP/seni-payload/Payload/$(basename "$APP")"
+          cd "$RUNNER_TEMP/seni-payload"
+          zip -qr "$RUNNER_TEMP/SENI_MARK_NEXU_unsigned.ipa" Payload
+      - name: 'Entregar IPA sin firma'
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: SENI-MARK-NEXU-IPA-UNSIGNED
+          path: ${{ runner.temp }}/SENI_MARK_NEXU_unsigned.ipa
+          if-no-files-found: error
+      - name: 'Entregar código fuente de la IPA'
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SENI-MARK-NEXU-CODIGO-FUENTE
+          path: ${{ runner.temp }}/seni-mark-app-source
+          if-no-files-found: ignore
+      - name: 'Entregar registro para investigar fallos'
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: SENI-MARK-NEXU-LOG-COMPILACION
+          path: ${{ runner.temp }}/seni-mark-xcodebuild.log
+          if-no-files-found: ignore
