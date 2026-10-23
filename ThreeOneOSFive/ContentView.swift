@@ -123,7 +123,7 @@ private struct GreegHomeView: View {
                         .shadow(color: AppTheme.accent.opacity(0.28), radius: 10)
 
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("GREEG APP")
+                        Text("SEN$I MARK")
                             .font(.system(size: 24, weight: .black, design: .rounded))
                             .lineLimit(1)
                             .minimumScaleFactor(0.68)
@@ -359,7 +359,7 @@ private struct GreegPatchLibraryView: View {
             HStack(spacing: 12) {
                 AppLogo(size: 40)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Centro GREEG")
+                    Text("Centro SENIMARK")
                         .font(.headline.weight(.black))
                     Text("\(visibleItems.count) archivos privados")
                         .font(.caption.weight(.semibold))
@@ -607,7 +607,7 @@ private struct GreegPatchRow: View {
                 )
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(project?.name ?? "Archivo GREEG")
+                    Text(project?.name ?? "Archivo SENIMARK")
                         .font(.headline.weight(.black))
                         .foregroundStyle(.white)
                         .lineLimit(2)
@@ -626,7 +626,7 @@ private struct GreegPatchRow: View {
     }
 
     private var iconName: String {
-        let name = (project?.name ?? "Archivo GREEG").lowercased()
+        let name = (project?.name ?? "Archivo SENIMARK").lowercased()
         if name.contains("cuello") {
             return "link.circle.fill"
         }
@@ -718,7 +718,7 @@ private struct GreegPatchDetailView: View {
                 HStack(spacing: 14) {
                     AppRowIcon(systemName: kind.iconName, tint: kind.tint, symbolSize: 16, frameSize: 40)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(project?.name ?? "Archivo GREEG")
+                        Text(project?.name ?? "Archivo SENIMARK")
                             .font(.system(size: 24, weight: .black, design: .rounded))
                             .lineLimit(2)
                             .minimumScaleFactor(0.75)
@@ -1057,7 +1057,7 @@ private struct GreegSocialView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Redes oficiales")
                             .font(.system(size: 26, weight: .black, design: .rounded))
-                        Text("Canal privado de GREEG APP.")
+                        Text("Canal privado de SEN$I MARK.")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(.secondary)
                     }
@@ -1086,7 +1086,7 @@ private enum GreegSocialLink {
     var subtitle: String { "@gregg_top" }
     var systemImage: String { "play.rectangle.fill" }
     var url: URL {
-        URL(string: "https://www.tiktok.com/@gregg_top?is_from_webapp=1&sender_device=pc")!
+        URL(string: "https://www.tiktok.com/@imarkzz20?_r=1&_t=ZS-9AkqsBtfFuW")!
     }
 }
 

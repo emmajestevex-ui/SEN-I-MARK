@@ -261,7 +261,7 @@ enum BundledPatchSeeder {
         for spec in activeProjects {
             do {
                 try seed(spec, fileManager: fileManager)
-                log("patch: bundled GREEG patch \(spec.defaultName) is ready")
+                log("patch: bundled SENIMARK patch \(spec.defaultName) is ready")
             } catch SeedError.missingPayload(let filename) {
                 log("patch: bundled payload missing for \(spec.defaultName): \(filename)")
             } catch SeedError.emptyPayload(let filename) {
@@ -682,16 +682,16 @@ enum BundledPatchSeeder {
     }
 
     private static func remoteStyleMarker(for file: RemoteContentFile) -> String {
-        let category = "[GREEG_CATEGORY:\(file.category.lowercased())]"
+        let category = "[SENIMARK_CATEGORY:\(file.category.lowercased())]"
         let lowercased = (file.description ?? "").lowercased()
         if lowercased.contains("[greeg_style:antena]") {
-            return "[GREEG_STYLE:antena] \(category)"
+            return "[SENIMARK_STYLE:antena] \(category)"
         }
         if lowercased.contains("[greeg_style:holo]") {
-            return "[GREEG_STYLE:holo] \(category)"
+            return "[SENIMARK_STYLE:holo] \(category)"
         }
         if lowercased.contains("[greeg_style:aimbot-normal]") {
-            return "[GREEG_STYLE:aimbot-normal] \(category)"
+            return "[SENIMARK_STYLE:aimbot-normal] \(category)"
         }
         return category
     }

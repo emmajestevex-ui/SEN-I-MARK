@@ -10,33 +10,19 @@ alter table public.license_admins enable row level security;
 create or replace function public.is_license_admin()
 returns boolean
 language sql
+stable
 security definer
 set search_path = public
 as $$
-    select
-        lower(coalesce(auth.jwt() ->> 'email', '')) in (
-            'ysiemmanuel9@gmail.com',
-            '2008yashirchavez@gmail.com',
-            'emmajestevex@gmail.com',
-            'grego23500@gmail.com'
-        )
-        or exists (
-            select 1
-            from public.license_admins
-            where user_id = auth.uid()
-        );
+    select exists (
+        select 1
+        from public.license_admins
+        where user_id = auth.uid()
+          and role in ('founder', 'admin')
+    );
 $$;
 
-insert into public.license_admins (user_id, role)
-select id, 'founder'
-from auth.users
-where lower(email) in (
-    'ysiemmanuel9@gmail.com',
-    '2008yashirchavez@gmail.com',
-    'emmajestevex@gmail.com',
-    'grego23500@gmail.com'
-)
-on conflict (user_id) do update
-set role = excluded.role;
+-- Legacy founder list intentionally removed for SEN$I MARK.
+
 
 grant execute on function public.is_license_admin() to authenticated;

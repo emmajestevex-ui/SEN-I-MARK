@@ -248,7 +248,7 @@ final class RemoteContentStore: ObservableObject {
     @Published private(set) var installedFiles: [RemoteContentFile] = []
     @Published private(set) var remoteVersion = 0
     @Published private(set) var statusText = "Ready"
-    @Published private(set) var detailText = "Remote content is stored inside GREEG APP."
+    @Published private(set) var detailText = "Remote content is stored inside SEN$I MARK."
     @Published private(set) var progress: Double?
     @Published private(set) var lastChecked: Date?
     @Published private(set) var isBusy = false
@@ -682,7 +682,7 @@ final class RemoteContentStore: ObservableObject {
             .map { String($0).addingPercentEncoding(withAllowedCharacters: allowed) ?? String($0) }
             .joined(separator: "/")
         let base = SupabaseLicenseConfig.projectURL.absoluteString.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard let url = URL(string: "\(base)/storage/v1/object/greeg-content/\(encodedPath)") else {
+        guard let url = URL(string: "\(base)/storage/v1/object/seni-mark-content/\(encodedPath)") else {
             throw RemoteContentSyncError.badURL
         }
         return url

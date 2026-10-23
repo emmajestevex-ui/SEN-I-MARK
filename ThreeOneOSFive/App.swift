@@ -352,7 +352,7 @@ private struct GreegLicenseView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "key.fill")
                             .foregroundStyle(AppTheme.accent)
-                        TextField("GREEG-ABCD-EF12-3456", text: $key)
+                        TextField("SENIMARK-ABCD-EF12-3456", text: $key)
                             .textInputAutocapitalization(.characters)
                             .autocorrectionDisabled()
                             .foregroundStyle(.white)
@@ -395,7 +395,7 @@ private struct GreegLicenseView: View {
                     .foregroundStyle(.secondary)
 
                 Spacer()
-                Text("GREEG APP - STAY PRIVATE")
+                Text("SEN$I MARK - STAY PRIVATE")
                     .font(.caption2.weight(.semibold))
                     .tracking(2)
                     .foregroundStyle(.secondary)
@@ -448,8 +448,8 @@ private struct GreegLicenseView: View {
 }
 
 enum SupabaseLicenseConfig {
-    static let projectURL = URL(string: "https://oqpgabogasnxjejgakrt.supabase.co")!
-    static let publishableKey = "sb_publishable_yL2R4NnUAO5SBP04edbPrg_zWpPFA31"
+    static let projectURL = URL(string: "https://zkprqwgeagqireqrrhei.supabase.co")!
+    static let publishableKey = "sb_publishable_tQ88K1eydtR-7JBgTfMglQ_J55QtO65"
 }
 
 enum LicenseEntitlements {
